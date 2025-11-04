@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
 
 // Routes
+import 'katex/dist/katex.min.css'
 import AppRoutes from './routes/AppRoutes'
 
 function App() {

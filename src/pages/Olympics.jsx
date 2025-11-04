@@ -22,13 +22,6 @@ const Olympics = () => {
 	const [currentView, setCurrentView] = useState('olympics') // 'olympics' or 'sections'
 	const [formData, setFormData] = useState({
 		contextName: '',
-		date: '',
-		sectionsCount: '',
-		testsCount: '',
-		subject: '',
-		status: 'Faol',
-		xpPoints: '',
-		duration: '',
 	})
 	const [sectionFormData, setSectionFormData] = useState({
 		name: '',
@@ -67,75 +60,91 @@ const Olympics = () => {
 		},
 		{
 			key: 'sectionsCount',
-			title: 'Qismlar',
+			title: 'Fan/qismlar',
 			icon: true,
 			render: item => `${item.sectionsCount || 0} ta`,
 		},
 		{
 			key: 'testsCount',
-			title: 'Testlar',
+			title: 'tlar',
+			icon: true,
 			render: item => `${item.testsCount || 0} ta`,
 		},
 		{
 			key: 'actions',
 			title: 'Amallar',
 			icon: true,
-			render: (item, index) => (
-				<div className='flex space-x-2'>
-					{item.sectionsCount > 0 ? (
+			render: (item, index) => {
+				// Check if contest is fully filled (has sections and tests)
+				const isFullyFilled = item.sectionsCount > 0 && item.testsCount > 0
+
+				return (
+					<div className='flex space-x-2'>
+						{/* Initially: to'ldirish button, after filling: Grid3X3 button */}
+						{isFullyFilled ? (
+							<button
+								onClick={e => {
+									e.stopPropagation()
+									onViewSections(item)
+								}}
+								className='p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
+								title="Fan/qismlarni ko'rish"
+							>
+								<Grid3X3 className='h-4 w-4' />
+							</button>
+						) : (
+							<button
+								onClick={e => {
+									e.stopPropagation()
+									handleFillOlympic(item)
+								}}
+								className='px-3 py-1 text-white text-xs rounded-lg bg-red-500 hover:bg-red-600 transition-colors'
+								title="Olimpiadani to'ldirish"
+							>
+								to'ldirish
+							</button>
+						)}
+
+						{/* Edit button */}
 						<button
 							onClick={e => {
 								e.stopPropagation()
-								onViewSections(item)
+								openEditModal(item)
 							}}
 							className='p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
-							title="Qismlarni ko'rish"
+							title='Tahrirlash'
 						>
-							<Grid3X3 className='h-4 w-4' />
+							<Edit2 className='h-4 w-4' />
 						</button>
-					) : (
+
+						{/* Trash button */}
 						<button
 							onClick={e => {
 								e.stopPropagation()
-								handleFillOlympic(item)
+								handleDelete(item.id)
 							}}
-							disabled={item.testsCount === 0}
-							className={`px-3 py-1 text-white text-xs rounded-lg transition-colors ${
-								item.testsCount === 0
-									? 'bg-gray-400 cursor-not-allowed'
-									: 'bg-red-500 hover:bg-red-600'
-							}`}
-							title={
-								item.testsCount === 0
-									? 'Testlar soni kiritilmagan'
-									: "Olimpiadani to'ldirish"
-							}
+							className='p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
+							title="O'chirish"
 						>
-							to'ldirish
+							<Trash2 className='h-4 w-4' />
 						</button>
-					)}
-					<button
-						onClick={e => {
-							e.stopPropagation()
-							openEditModal(item)
-						}}
-						className='p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
-						title='Tahrirlash'
-					>
-						<Edit2 className='h-4 w-4' />
-					</button>
-					<button
-						onClick={e => {
-							e.stopPropagation()
-							handleDelete(item.id)
-						}}
-						className='p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
-						title="O'chirish"
-					>
-						<Trash2 className='h-4 w-4' />
-					</button>
-				</div>
-			),
+
+						{/* 4th button (boshlash) - only when contest is fully filled */}
+						{isFullyFilled && (
+							<button
+								onClick={e => {
+									e.stopPropagation()
+									handleStartContest(item)
+								}}
+								className='px-3 py-1 text-white text-xs rounded-lg bg-green-500 hover:bg-green-600 transition-colors'
+								title='Olimpiadani boshlash'
+							>
+								boshlash
+							</button>
+						)}
+					</div>
+				)
+			},
 		},
 	]
 
@@ -156,13 +165,14 @@ const Olympics = () => {
 		},
 		{
 			key: 'sections',
-			title: 'Qismlar',
+			title: 'Fan/qismlar',
 			icon: true,
 			render: item => `${item.sections || 0} ta`,
 		},
 		{
 			key: 'tests',
-			title: 'Testlar',
+			title: 'tlar',
+			icon: true,
 			render: item => `${item.tests || 0} ta`,
 		},
 		{
@@ -182,7 +192,7 @@ const Olympics = () => {
 		},
 	]
 
-	// Form field definitions
+	// Form field definitions - simplified to only name
 	const olympicFormFields = [
 		{
 			name: 'contextName',
@@ -190,36 +200,7 @@ const Olympics = () => {
 			label: 'Olimpiada nomi',
 			value: formData.contextName,
 			onChange: e => setFormData({ ...formData, contextName: e.target.value }),
-			placeholder: "Bo'linish belgilari",
-			required: true,
-		},
-		{
-			name: 'date',
-			type: 'date',
-			label: 'Yaratilgan vaqti',
-			value: formData.date,
-			onChange: e => setFormData({ ...formData, date: e.target.value }),
-			required: true,
-		},
-		{
-			name: 'sectionsCount',
-			type: 'number',
-			label: 'Qismlar soni',
-			value: formData.sectionsCount,
-			onChange: e =>
-				setFormData({ ...formData, sectionsCount: e.target.value }),
-			placeholder: '0',
-			min: 0,
-			required: true,
-		},
-		{
-			name: 'testsCount',
-			type: 'number',
-			label: 'Testlar soni',
-			value: formData.testsCount,
-			onChange: e => setFormData({ ...formData, testsCount: e.target.value }),
-			placeholder: '0',
-			min: 0,
+			placeholder: 'Olimpiada nomini kiriting',
 			required: true,
 		},
 	]
@@ -288,12 +269,7 @@ const Olympics = () => {
 		e.preventDefault()
 		try {
 			const newOlympic = await olympicsService.createOlympic({
-				...formData,
-				xpPoints: parseInt(formData.xpPoints) || 0,
-				sectionsCount: parseInt(formData.sectionsCount) || 0,
-				testsCount: parseInt(formData.testsCount) || 0,
-				solvedCount: 0,
-				date: formData.date || new Date().toISOString().split('T')[0],
+				contextName: formData.contextName,
 			})
 			setOlympics([newOlympic, ...olympics])
 			setIsCreateModalOpen(false)
@@ -311,10 +287,7 @@ const Olympics = () => {
 			const updatedOlympic = await olympicsService.updateOlympic(
 				selectedOlympic.id,
 				{
-					...formData,
-					xpPoints: parseInt(formData.xpPoints) || 0,
-					sectionsCount: parseInt(formData.sectionsCount) || 0,
-					testsCount: parseInt(formData.testsCount) || 0,
+					contextName: formData.contextName,
 				}
 			)
 			setOlympics(
@@ -343,13 +316,6 @@ const Olympics = () => {
 		setSelectedOlympic(olympic)
 		setFormData({
 			contextName: olympic.contextName,
-			date: olympic.date,
-			sectionsCount: olympic.sectionsCount?.toString() || '0',
-			testsCount: olympic.testsCount?.toString() || '0',
-			subject: olympic.subject,
-			status: olympic.status,
-			xpPoints: olympic.xpPoints?.toString() || '0',
-			duration: olympic.duration,
 		})
 		setIsEditModalOpen(true)
 	}
@@ -357,13 +323,6 @@ const Olympics = () => {
 	const resetForm = () => {
 		setFormData({
 			contextName: '',
-			date: '',
-			sectionsCount: '',
-			testsCount: '',
-			subject: '',
-			status: 'Faol',
-			xpPoints: '',
-			duration: '',
 		})
 	}
 
@@ -394,7 +353,13 @@ const Olympics = () => {
 	}
 
 	const handleFillOlympic = olympic => {
-		navigate(`/exercise/${olympic.id}`)
+		// Navigate to fan/qismlar page to fill the contest
+		navigate(`/olympics/${olympic.id}/sections`)
+	}
+
+	const handleStartContest = olympic => {
+		// Navigate to O'tkazishlar page (for now, just home page as requested)
+		navigate('/')
 	}
 
 	const filteredOlympics = olympics.filter(
@@ -553,36 +518,6 @@ const Olympics = () => {
 							value: formData.contextName,
 							onChange: e =>
 								setFormData({ ...formData, contextName: e.target.value }),
-							required: true,
-						},
-						{
-							name: 'date',
-							type: 'date',
-							label: 'Yaratilgan vaqti',
-							value: formData.date,
-							onChange: e => setFormData({ ...formData, date: e.target.value }),
-							required: true,
-						},
-						{
-							name: 'sectionsCount',
-							type: 'number',
-							label: 'Qismlar soni',
-							value: formData.sectionsCount,
-							onChange: e =>
-								setFormData({ ...formData, sectionsCount: e.target.value }),
-							placeholder: '0',
-							min: 0,
-							required: true,
-						},
-						{
-							name: 'testsCount',
-							type: 'number',
-							label: 'Testlar soni',
-							value: formData.testsCount,
-							onChange: e =>
-								setFormData({ ...formData, testsCount: e.target.value }),
-							placeholder: '0',
-							min: 0,
 							required: true,
 						},
 					]}

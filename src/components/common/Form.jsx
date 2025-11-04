@@ -135,6 +135,31 @@ const Form = ({
 					</div>
 				)
 
+			case 'variants':
+				return (
+					<div className='space-y-3'>
+						{field.value?.map((variant, index) => (
+							<div key={index} className='flex items-center space-x-3'>
+								<input
+									type='radio'
+									name='correctAnswer'
+									checked={field.correctAnswer === index}
+									onChange={() => field.onCorrectAnswerChange(index)}
+									className='w-4 h-4 text-green-600 bg-gray-100 border-gray-300 focus:ring-green-500 dark:focus:ring-green-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600'
+								/>
+								<input
+									type='text'
+									value={variant}
+									onChange={e => field.onChange(index, e.target.value)}
+									placeholder={`Variant ${index + 1}`}
+									className='flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
+									required={field.required}
+								/>
+							</div>
+						))}
+					</div>
+				)
+
 			default:
 				return (
 					<input
@@ -171,29 +196,81 @@ const Form = ({
 		}
 	}
 
+	// Group fields by row based on width property
+	const groupFieldsByRow = () => {
+		const rows = []
+		let currentRow = []
+
+		fields.forEach(field => {
+			if (field.fullWidth) {
+				if (currentRow.length > 0) {
+					rows.push(currentRow)
+					currentRow = []
+				}
+				rows.push([field])
+			} else if (field.width === '1/3') {
+				currentRow.push(field)
+				if (currentRow.length === 3) {
+					rows.push(currentRow)
+					currentRow = []
+				}
+			} else {
+				if (currentRow.length > 0) {
+					rows.push(currentRow)
+					currentRow = []
+				}
+				rows.push([field])
+			}
+		})
+
+		if (currentRow.length > 0) {
+			rows.push(currentRow)
+		}
+
+		return rows
+	}
+
+	const getFieldWidth = field => {
+		if (field.fullWidth) return 'w-full'
+		if (field.width === '1/3') return 'w-full md:w-1/3'
+		return 'w-full'
+	}
+
 	return (
 		<form onSubmit={handleSubmit} className={className}>
 			<div className='space-y-4'>
-				{fields.map((field, index) => (
-					<div key={field.name || index}>
-						{field.type !== 'checkbox' && field.label && (
-							<label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
-								{field.label}
-								{field.required && <span className='text-red-500 ml-1'>*</span>}
-							</label>
-						)}
+				{groupFieldsByRow().map((row, rowIndex) => (
+					<div
+						key={rowIndex}
+						className={row.length > 1 ? 'flex flex-col md:flex-row gap-4' : ''}
+					>
+						{row.map((field, fieldIndex) => (
+							<div
+								key={field.name || fieldIndex}
+								className={getFieldWidth(field)}
+							>
+								{field.type !== 'checkbox' && field.label && (
+									<label className='block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1'>
+										{field.label}
+										{field.required && (
+											<span className='text-red-500 ml-1'>*</span>
+										)}
+									</label>
+								)}
 
-						{renderField(field)}
+								{renderField(field)}
 
-						{field.helperText && (
-							<div className='text-sm text-gray-500 mt-1'>
-								{field.helperText}
+								{field.helperText && (
+									<div className='text-sm text-gray-500 mt-1'>
+										{field.helperText}
+									</div>
+								)}
+
+								{field.error && (
+									<div className='text-sm text-red-500 mt-1'>{field.error}</div>
+								)}
 							</div>
-						)}
-
-						{field.error && (
-							<div className='text-sm text-red-500 mt-1'>{field.error}</div>
-						)}
+						))}
 					</div>
 				))}
 			</div>

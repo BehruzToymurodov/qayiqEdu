@@ -13,8 +13,10 @@ import Exercise from '../pages/Exercise'
 import Home from '../pages/Home'
 import Login from '../pages/Login'
 import Olympics from '../pages/Olympics'
+import OlympicSections from '../pages/OlympicSections'
 import Profile from '../pages/Profile'
 import Register from '../pages/Register'
+import SectionTests from '../pages/SectionTests'
 
 const PrivateRoute = ({ children }) => {
 	const { isAuthenticated, loading } = useAuth()
@@ -103,6 +105,26 @@ const AppRoutes = () => {
 					<PrivateRoute>
 						<Layout>
 							<Olympics />
+						</Layout>
+					</PrivateRoute>
+				}
+			/>
+			<Route
+				path='/olympics/:olympicId/sections'
+				element={
+					<PrivateRoute>
+						<Layout>
+							<OlympicSections />
+						</Layout>
+					</PrivateRoute>
+				}
+			/>
+			<Route
+				path='/olympics/:olympicId/sections/:sectionId/tests'
+				element={
+					<PrivateRoute>
+						<Layout>
+							<SectionTests />
 						</Layout>
 					</PrivateRoute>
 				}
