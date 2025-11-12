@@ -1,0 +1,7 @@
+.prose img {
+	max-width: 100%;
+	height: auto;
+}
+.ql-editor {
+	min-height: 120px;
+}

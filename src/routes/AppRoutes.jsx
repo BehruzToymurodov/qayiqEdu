@@ -16,7 +16,7 @@ import Olympics from '../pages/Olympics'
 import OlympicSections from '../pages/OlympicSections'
 import Profile from '../pages/Profile'
 import Register from '../pages/Register'
-import SectionTests from '../pages/SectionTests'
+import TestPage from '../pages/TestPage'
 
 const PrivateRoute = ({ children }) => {
 	const { isAuthenticated, loading } = useAuth()
@@ -124,7 +124,7 @@ const AppRoutes = () => {
 				element={
 					<PrivateRoute>
 						<Layout>
-							<SectionTests />
+							<TestPage />
 						</Layout>
 					</PrivateRoute>
 				}
